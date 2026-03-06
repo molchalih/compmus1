@@ -23,3 +23,19 @@ The object of this study is [**Radiohead - Knives Out (2001)**](https://www.yout
 
 (3) the diagonal lines are strong, suggesting quite similar, recurring sections. 
 (4) the checkerboard pattern is particularly present, suggesting an abundance of recurring sections. 
+
+<div style="display: flex; gap: 20px;"> 
+  <img src="images/twnety_five_keygram.png" width="400" alt="aphex twin chromagram"> 
+  <img src="images/twnety_five_chordogram.png" width="400" alt="aphex twin cepstrogram"> 
+</div>
+
+(1) something about keys
+(2) something about chords
+
+<div style="display: flex; gap: 20px;"> 
+  <img src="images/radiohead_keygram.png" width="400" alt="aphex twin chromagram"> 
+  <img src="images/radiohead_chordogram.png" width="400" alt="aphex twin cepstrogram"> 
+</div>
+
+(1) something about keys
+(2) something about chords
