@@ -61,7 +61,7 @@ The object of study of later is [**Radiohead - Knives Out (2001)**](https://www.
   <img src="images/week11/square_dft.png" width="350" alt="tempo dft homework example">
 </div>
 
-For this analysis My Red Hot Car by Squarepusher was chosen. 
+(0) For this analysis My Red Hot Car by Squarepusher was chosen.
 (1) the novelty visualization shows equal transient distribution within first 30 seconds of the track. some are slightly more acute, some less. this likely occurs due to high-density of resampled breaks, resulting in uneven though quite rythmical structure.
 (2) ACT suggests various tempo options which spread across different frequencies.
 (3) DFT strongly points to 280 BPM, which is uncommon for electronic tracks. therefore, it must be double time with the actual tempo lying around 140 BPM. 
