@@ -20,7 +20,7 @@ This repo contains materials related to computational musicology course. To be m
 
 The object of study of later is [**Radiohead - Knives Out (2001)**](https://www.youtube.com/watch?v=2Lpw3yMCWro&list=RD2Lpw3yMCWro). Several operations have been performed. In particular, two temporal features: *(1)* **a chromatic analysis**, in which pitch information was charted in time; *(2)* **a timbre analysis**, which charts mel-frequencies information in time. The other part covers temporal self-similarity by utilizing **self-similarity matrices** for *(3)* **chromatic** features, and *(4)* **timbre-based** features.
 
-# Radiohead
+# Homework
 
 ## Analysis Views {.tabset}
 
@@ -53,6 +53,19 @@ The object of study of later is [**Radiohead - Knives Out (2001)**](https://www.
 (1) the keygram centers around G# min and Bb min, suggesting this window being the tonal center.
 (2) certain patterns can be noticed. for instance, the c#min-centered tonal information is alternating for the whole track. at the same time, the F#min takes the lead during the other part of the phase. this information can provide insight for further chord-progression analysis.
 
+### Tempo + Novelty (week 11)
+
+<div style="display: flex; flex-wrap: wrap; gap: 20px;">
+  <img src="images/week11/square-novelty.png" width="350" alt="novelty homework example">
+  <img src="images/week11/square_act.png" width="350" alt="tempo activation homework example">
+  <img src="images/week11/square_dft.png" width="350" alt="tempo dft homework example">
+</div>
+
+For this analysis My Red Hot Car by Squarepusher was chosen. 
+(1) the novelty visualization shows equal transient distribution within first 30 seconds of the track. some are slightly more acute, some less. this likely occurs due to high-density of resampled breaks, resulting in uneven though quite rythmical structure.
+(2) ACT suggests various tempo options which spread across different frequencies.
+(3) DFT strongly points to 280 BPM, which is uncommon for electronic tracks. therefore, it must be double time with the actual tempo lying around 140 BPM. 
+
 # Classwork
 
 ## Classroom Views {.tabset}
@@ -76,4 +89,12 @@ The object of study of later is [**Radiohead - Knives Out (2001)**](https://www.
 <div style="display: flex; gap: 20px;">     
   <img src="images/twnety_five_keygram.png" width="400" alt="aphex twin chromagram"> 
   <img src="images/twnety_five_chordogram.png" width="400" alt="aphex twin cepstrogram"> 
+</div>
+
+### Tempo + Novelty (Week 11 Classroom)
+
+<div style="display: flex; flex-wrap: wrap; gap: 20px;">
+  <img src="images/week11/graveola_act.png" width="350" alt="tempo activation classroom example">
+  <img src="images/week11/graveola_dft.png" width="350" alt="tempo dft classroom example">
+  <img src="images/week11/pata-pata-novelty.png" width="350" alt="novelty classroom example">
 </div>
