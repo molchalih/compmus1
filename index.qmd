@@ -50,8 +50,10 @@ The object of study of later is [**Radiohead - Knives Out (2001)**](https://www.
   <img src="images/radiohead_chordogram.png" width="400" alt="aphex twin cepstrogram"> 
 </div>
 
-(1) the keygram centers around G# min and Bb min, suggesting this window being the tonal center.
-(2) certain patterns can be noticed. for instance, the c#min-centered tonal information is alternating for the whole track. at the same time, the F#min takes the lead during the other part of the phase. this information can provide insight for further chord-progression analysis.
+the keygram centers around G# min and Bb min, suggesting this window being the tonal center.
+
+
+certain patterns can be noticed. for instance, the c#min-centered tonal information is alternating for the whole track. at the same time, the F#min takes the lead during the other part of the phase. this information can provide insight for further chord-progression analysis.
 
 ### Tempo + Novelty (week 11)
 
@@ -61,10 +63,28 @@ The object of study of later is [**Radiohead - Knives Out (2001)**](https://www.
   <img src="images/week11/square_dft.png" width="350" alt="tempo dft homework example">
 </div>
 
-(0) For this analysis My Red Hot Car by Squarepusher was chosen.
-(1) the novelty visualization shows equal transient distribution within first 30 seconds of the track. some are slightly more acute, some less. this likely occurs due to high-density of resampled breaks, resulting in uneven though quite rythmical structure.
-(2) ACT suggests various tempo options which spread across different frequencies.
-(3) DFT strongly points to 280 BPM, which is uncommon for electronic tracks. therefore, it must be double time with the actual tempo lying around 140 BPM. 
+For this analysis My Red Hot Car by Squarepusher was chosen.
+
+
+the novelty visualization shows equal transient distribution within first 30 seconds of the track. some are slightly more acute, some less. this likely occurs due to high-density of resampled breaks, resulting in uneven though quite rythmical structure.
+
+
+ACT suggests various tempo options which spread across different frequencies.
+
+
+DFT strongly points to 280 BPM, which is uncommon for electronic tracks. therefore, it must be double time with the actual tempo lying around 140 BPM.
+
+### Spotify API (week 12)
+
+<div style="display: flex; flex-wrap: wrap; gap: 20px;">
+  <img src="images/week12/warp_dendrogram.png" width="400">
+  <img src="images/week12/warp_heatmap.png" width="400">
+</div>
+
+Dendrogram shows the connections between tracks based on extracted Spotify API features. the lower connected tracks tend to share the same values, e.g. Xtal, Eutow, Reach for The Dead are highly similiar. Another cluster is Aquarious, Vordhoshbrn, Beep Street, and Port Rhombus. 
+
+
+Heatmap allows visual exploration of the mentioned features.
 
 # Classwork
 
@@ -86,15 +106,31 @@ The object of study of later is [**Radiohead - Knives Out (2001)**](https://www.
 
 ### Zager and Evans’ Keygram + Chordogram (Week 10)
 
-<div style="display: flex; gap: 20px;">     
+<div style="display: flex; gap: 20px;">
   <img src="images/twnety_five_keygram.png" width="400" alt="aphex twin chromagram"> 
   <img src="images/twnety_five_chordogram.png" width="400" alt="aphex twin cepstrogram"> 
 </div>
 
-### Tempo + Novelty (Week 11 Classroom)
+### Tempo + Novelty (Week 11)
 
 <div style="display: flex; flex-wrap: wrap; gap: 20px;">
   <img src="images/week11/graveola_act.png" width="350" alt="tempo activation classroom example">
   <img src="images/week11/graveola_dft.png" width="350" alt="tempo dft classroom example">
   <img src="images/week11/pata-pata-novelty.png" width="350" alt="novelty classroom example">
 </div>
+
+### Spotify API (Week 12)
+
+<div style="display: flex; flex-wrap: wrap; gap: 20px;">
+  <img src="images/week12/nrc_dendrogram.png" width="400">
+  <img src="images/week12/nrc_heatmap.png" width="400">
+</div>
+
+NRC Weekly selection playlist
+
+<div style="display: flex; flex-wrap: wrap; gap: 20px;">
+  <img src="images/week12/pop_dendrogram.png" width="400">
+  <img src="images/week12/pop_heatmap.png" width="400">
+</div>
+
+Spotify pop playlist
