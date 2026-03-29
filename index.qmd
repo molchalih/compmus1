@@ -26,11 +26,11 @@ tracks <- readRDS("data/tracks.rds")
 
 # Overview
 
-This study aims to explore IDM music. It is generally accepted that this subfield encompasses a fairly broad range of musical compositions, that yet still reflects a certain commonality. From this, certain issues with operationalization stem. Reasonably, what is called IDM is more a characteristic of a specific cultural movement than a concrete, explicit musical genre (). This study pays particular attention to such conceptual criticism and acknowledges its constructed nature. For this reason, it becomes fruitful to examine the roots of this movement to distinguish specific definition. In his book covering the development of electronic music, Simon Reynolds argues that the IDM movement reflects the wide-spanning of a broad electronic movement. Consequently, there is a shift from dancing to the act of listening: *“interest in ‘chill-out’ music as a supplement or sequel to the rave”* (Reynolds 2012.) It is precisely this detachment of the music from rave culture from the outset that becomes its defining feature. Significantly, Reynolds links this concept to the activities of a specific circle of cultural actors. The key institutionalized actor is the Sheffield-based Warp label. He also highlights particular individual actors: Squarepusher, Aphex Twin, μ-Ziq, Autechre, Boards of Canada, and others. That is, IDM music is understood as a network of closely connected artists originating from the UK during the 1990s, rather than as a distinct genre.
+This study aims to explore IDM music. It is generally accepted that this subfield encompasses a fairly broad range of musical compositions that yet still reflect a certain commonality. From this, certain issues with operationalization stem. Reasonably, what is called IDM is more a characteristic of a rather culturally constructed entity than a concrete, explicit musical genre. This study pays particular attention to such conceptual criticism and acknowledges its constructed nature. For this reason, it becomes fruitful to examine the roots of this movement to distinguish specific definitions. In his book covering the development of electronic music, Simon Reynolds argues that the IDM movement reflects the wide span of a broad electronic movement. Consequently, there is a shift from dancing to the act of listening: “interest in ‘chill-out’ music as a supplement or sequel to the rave” (Reynolds 2012.) It is precisely this detachment of the music from rave culture from the outset that becomes its defining feature. Significantly, Reynolds links this concept to the activities of a specific circle of cultural actors. The key institutionalized actor is the Sheffield-based Warp label. He also highlights particular individual actors: Squarepusher, Aphex Twin, μ-Ziq, Autechre, Boards of Canada, and others. That is, IDM music is understood as a network of closely connected artists originating from the UK during the 1990s, rather than as a distinct genre.
 
-Many notable scholars investigate the features of this music. For example, Kodwo Eshun (1998) notes that such music should be framed as a form of sonic experimentation. Musicians often play with various musical elements to achieve a futuristic, abstract, and unusual sound. The practice of exploring digital timbre gives rise to unconventional musical elements and structures. For instance, *We Are the Music Makers* by Aphex Twin () is described as: *“long stretches of just beats and bass-fuzz, teasing you with intermittent flickers of twinkly synth in the farthest corner of the soundscape,”* while *Pulsewidth* is literally *“ambient techno”* (Reynolds 2012). The use of such and other musical approaches is of great interest to musicology. It offers an opportunity to look beyond conventional solutions and, consequently, to expand the concept of what we understand as music.
+Many notable scholars investigate the features of this music. For example, Kodwo Eshun (1998) notes that such music should be framed as a form of sonic experimentation. Musicians often play with various musical elements to achieve a futuristic, abstract, and unusual sound. The practice of exploring digital timbre gives rise to unconventional musical elements and structures. For instance, We Are the Music Makers by Aphex Twin is described as "long stretches of just beats and bass fuzz, teasing you with intermittent flickers of twinkly synth in the farthest corner of the soundscape,” while Pulsewidth is literally “ambient techno” (Reynolds 2012). The use of such and other musical approaches is of great interest to musicology. It offers an opportunity to look beyond conventional solutions and, consequently, to expand the concept of what we understand as music.
 
-Based on this, a dataset of 22 tracks defined as IDM was compiled. This exploratory study poses the research question: How can the musical characteristics of compositions associated with the British IDM movement of the 1990s be identified, and to what extent do they correspond to its definition as experimental electronic music oriented toward attentive listening?
+Based on this, a dataset of 22 tracks defined as IDM was compiled. This exploratory study aims to explore what musical characteristics of the 1990s British IDM movement can be identified and to what extent they correspond to its definition as experimental electronic music oriented toward attentive listening. 
 
 
 ```{r}
@@ -362,12 +362,9 @@ scatter_plot2 <-
 ::: {style="display:grid; grid-template-columns: 1fr 1.35fr; gap: 1rem; align-items:start; min-height: 76vh;"}
 ::: {}
 
-####Overview
+This part of the study utilizes Spotify-generated features to analyze the relations between the track. The section below conceptualizes the specific variables which are used within the study, as provided by Spotify documentation. 
 
-This part of the study utilizes Spotify-generated features to analyze the relations between the track. The section below conceptualizes the specific variables which are used within the study, as provided by Spotify documentation (). 
-
-####Description
-
+**acousticness** = "whether the track is acoustic"
 **danceability** = "how suitable a track is for dancing based on ... tempo, rhythm stability, beat strength, and overall regularity."
 **energy** = "perceptual measure of intensity and activity ... fast, loud, and noisy"
 **instrumentalness** = "whether a track contains no vocals"
@@ -388,13 +385,13 @@ dendro_plot
 ::: {style="display:grid; grid-template-columns: 1fr 1.35fr; gap: 1rem; align-items:start; min-height: 76vh;"}
 ::: {}
 
-####Overview
+**Overview**
 
 This dendrogram explores Spotify-generated features to cluster the similar tracks. The more closely tracks are connected, the more features they share, essentially, manifesting a cluster. 
 
-####Interpretation
+**Interpretation**
 
-This analysis reveals several particular findings. 
+This analysis reveals several particular findings. *Port Rhumbus* and *Beep Street* by Squarepusher and *Vordhosbn* by Apex Twin are closely related, suggesting the emphatsis on rythmic complexities. The other end reveals *Olson* by Boards of Canada and *Avril 14th* by Aphew Twin suggesting a less rigid category, rather related to ambient compositions.  
 
 :::
 ::: {}
@@ -409,13 +406,18 @@ dendro_plot
 ::: {style="display:grid; grid-template-columns: 1fr 1.35fr; gap: 1rem; align-items:start; min-height: 76vh;"}
 ::: {}
 
-####Overview
+**Overview**
 
 This heatmap is organized to explore the Spotify-generated composition features. It is employed as an exploratory tool, allowing for manual interpretation of the results. Additionally, a computer-generated clustering is available on the next page. 
 
-####Interpretation
+**Interpretation**
 
-This particular plot provides some important insights. **Instrumentalness** is very steady and it lies around **0.4** for most of the tracks. However, there are some interestig exceptions: *Windowclicker* by Aphex Twin **(-2.3)**, *Flutter* by Autechre **(-2.1)**, and *Cichli* by Autechre **(-2.2)**. These tracks do not content spoken words (except for a french phrase in **Windowclicker** at 2:44), however they are distinct to feature a textured high-frequency vocalization. 
+This particular plot provides some important insights. *Instrumentalness* is similar across the sample, lying around *0.4* for most of the tracks. However, there are some interesting exceptions: *Windowlicker* by Aphex Twin (-2.3), *Flutter* and *Cichli* by Autechre (*-2.1* and *-2.2*). The data from the heatmap resembles values extremely close to 0, as provided by the Spotify API. These tracks, indeed, do not have spoken words (except for a French phrase in *Windowclicker* at 2:44). However, such results are vivid, considering that exactly these songs feature a textured, synthetically sounding high-frequency vocalization during the whole composition. Hence, these results might have emerged because of the confusion the model experienced during the analysis. This might be possible due to a training dataset overpopulated by organically sounding human vocals.
+
+Acousticness is more variable across the sample, while the average value is low. This is expected because pieces are electronically produced and generally do not possess related qualities. Although, there are some exceptions: *Tha, Fingerbib, Avril 14th* by Aphex Twin, and *Olson* by Boards of Canada. These songs have a lot of acoustic effects (reverb and delay), which seem to be individually adjusted for different instruments. This provides for a vivid perception of space, where different sounds due to their color originate from various places. This provides for a soundscape-like composition, though featuring uncommon elements for this genre. 
+
+Danceability is the most variable property in this dataset. *Olson, Dayvan Cowboy* by Boards of Canada, and *Tundra 4, Flutter* by Autechre, have the least values, while *My Red Hot Car* by Squarepusher and *Alberto Balsalm* by Aphex Twin have the highest. This distinction is pivotal for this study, as it highlights the intricate rhythmical interrelations in this playlist. The least danceable tracks have a weak rhythmical foundation. The drum section actively oscillates; it repeatedly disappears and appears back again. This results in a repeating contrast between the quiet pads section and the loud drumming one. At the same time, the most dansable tracks have a relatively stable rhythmical structure, whereas other instruments are modulated and layered on top. 
+
 :::
 ::: {}
 ```{r}
@@ -439,13 +441,13 @@ heatmaply(
 ::: {style="display:grid; grid-template-columns: 1fr 1.35fr; gap: 1rem; align-items:start; min-height: 76vh;"}
 ::: {}
 
-####Overview
+**Overview**
 
 This scatter plot reveals the relations between variables provided by Spotify. Namely, it explores how **acousticness** *(x-axis)* is related to **energy** *(y-axis)*, while color of the dot represents the evaluated cluster.
 
-####Interpretation
+**Interpretation**
 
-This analysis reveals several particular findings.
+Most of the tracks cluster with low acousticness and high energy, which reveals the their electronic production nature. 
 
 :::
 ::: {}
@@ -460,13 +462,13 @@ scatter_plot1
 ::: {style="display:grid; grid-template-columns: 1fr 1.35fr; gap: 1rem; align-items:start; min-height: 76vh;"}
 ::: {}
 
-####Overview
+**Overview**
 
 This second scatter plot also servses the same purpose, however it investigates different variables. Specifically, this plot analyzes the relations between **instrumentalness** *(x-axis)* and **speechiness** *(y-axis)*, while color of the dot represents the evaluated cluster.
 
-####Interpretation
+**Interpretation**
 
-This analysis reveals several particular findings.
+High instrumentalness and low speechiness is due to their electronic nature, as well as reports the non-verbal expression as a primary communication. 
 
 :::
 ::: {}
@@ -480,16 +482,17 @@ scatter_plot2
 
 # Conclusions
 
-The chosen dataset has shown two distinct categories: ambient-like pieces and rhythmical compositions. At first, it might seem an unconventional and unexpected finding, giving that the tracks and artists are closely related. However, in fact, it was a somewhat expected result, given the originally mentioned ambiguities within the IDM. In this sense, the lack of visible genre-related distinctions provides a strong ground for conceptualisation of IDM as a movement, rather than a strict genre.
+The chosen dataset has shown two distinct categories: ambient-like pieces and rhythmical compositions. At first, it might seem an unconventional and unexpected finding, giving that the tracks and artists are closely related. However, in fact, it was a somewhat expected result, given the originally mentioned ambiguities within the IDM. In this sense, the lack of visible genre-related distinctions provides a strong ground for conceptualization of IDM as a movement, rather than a strict genre.
 
-The *ambient-like* category lacked informative rhythmic data, for this reason it was coined such a way. However, it has particularly flourished in what relates to harmonic properties. These tracks demonstrated a richness in their chromatic and timbre features. Another peculiar finding is a broad pitch variance that exceeds the traditional tonal frameworks. Notably, pieces rely on non-functional harmonic progressions and rich chromatic variations. On a timboral level, sound design prioritizes heavy processing, layering and texturing. It is credible to say that in this sense the timbre acts as one of the central elements. Arguably, this expanded pitch space and constantly modulated timbre allow to achieve a distinct both ethereal and alienated feeling. 
+The **ambient-like** category lacked informative rhythmic data; for this reason, it was coined such a way. However, it has particularly flourished in what relates to harmonic properties. These tracks demonstrated a richness in their chromatic and timbre features. Another peculiar finding is a broad pitch variance that exceeds the traditional tonal frameworks. Notably, pieces rely on non-functional harmonic progressions and rich chromatic variations. On a temporal level, sound design prioritizes heavy processing, layering, and texturing. It is credible to say that in this sense the timbre acts as one of the central elements. Arguably, this expanded pitch space and constantly modulated timbre allow one to achieve a distinct feeling that is both ethereal and alienated. 
 
-The *rhythmical* category, on the other hand, is defined by strong rhythmical arrangement. Compositions are rich for events, as the structure is non-rigid and tend to evolve actively and change drastically during the time. On a micro level, rhythmical patterns themselves have shown a highly syncopated and non-linear design. These tendencies for temporal segmentation and percussive articulations can also be particularly interesting for the field of cognitive musicology, as they create a sense of constant, though abrupt and turbulent movement.
-
-At the same time, both categories have shown some commonalities. In general, the chosen tracks are aiming to escape the traditional musical framework to utilize somewhat unexpected techniques and approaches. This tendency towards abstraction makes it hard for categorization using typical musical signifiers, inviting to a rahter interpretative listening. Therefore, despite seeming internal differences, the tracks are actually operating in the same aesthetic logic. Instead of prioritizing clear genre-specific features, they praise experimentation. This allows for continuously rebalanced listening guided by real-time perceptual adjustment rather than fixed expectations. 
+The **rhythmical category**, on the other hand, is defined by a strong rhythmical arrangement. Compositions are rich for events, as the structure is non-rigid and tends to evolve actively and change drastically during the time. On a micro level, rhythmical patterns themselves have shown a highly syncopated and non-linear design. These tendencies for temporal segmentation and percussive articulations can also be particularly interesting for the field of cognitive musicology, as they create a sense of constant, though abrupt and turbulent, movement.At the same time, both categories have shown some commonalities. In general, the chosen tracks are aiming to escape the traditional musical framework to utilize somewhat unexpected techniques and approaches. This tendency towards abstraction makes it hard for categorization using typical musical signifiers, inviting a rather interpretative listening. Therefore, despite seeming internal differences, the tracks are actually operating in the same aesthetic logic. Instead of prioritizing clear genre-specific features, they praise experimentation. This allows for continuously rebalanced listening guided by real-time perceptual adjustment rather than fixed expectations. 
 
 As for the future research, a bigger sample is needed to improve the reliability of the findings. It should be considered to employ a more nuanced methodological approach with an explicit focus on identified key elements. For instance, clustering the tonal data or rhythmical complexities would deepen the understanding of the specific mechanisms in a chosen sample.
 
 # References
 
-123
+Eshun, Kodwo. 1998. More Brilliant Than the Sun: Adventures in Sonic Fiction. Quartet Books (UK). 
+Müller, Meinard. 2015. Fundamentals of Music Processing: Audio, Analysis, Algorithms, Applications. Springer. 
+Reynolds, Simon. 2012. Energy Flash: A Journey Through Rave Music and Dance Culture. Catapult. 
+“Web API Reference | Spotify for Developers.” n.d. https://developer.spotify.com/documentation/web-api/reference/get-audio-features.

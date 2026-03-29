@@ -4,10 +4,10 @@ library(patchwork)
 library(ggplot2)
 
 
+# tracks = c("all"), # "all" for every track
 # --- configuration for per-track features generation ----
 config <- list(
-  # tracks = c("tha", "avril14th")
-  tracks = c("all"), # "all" for every track
+  tracks = c("Tha", "Avril 14th"),
   chroma = TRUE,
   timbre = TRUE,
   chroma_ssm = TRUE,
@@ -206,6 +206,15 @@ if (file.exists(cache_file)) {
     ) |>
     ungroup()
 
+# tracks |>
+#   distinct(track) |>
+#   print(n = Inf)
+
+if (!is.null(selected_tracks) && !(length(selected_tracks) == 1 && tolower(selected_tracks) == "all")) {
+  tracks <- tracks |>
+    filter(track %in% selected_tracks)
+}
+  
 if (!is.null(selected_tracks) && !(length(selected_tracks) == 1 && tolower(selected_tracks) == "all")) {
   tracks <- tracks |>
     filter(track %in% selected_tracks)
