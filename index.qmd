@@ -5,9 +5,8 @@ format:
     theme: journal
 execute:
   echo: false
-  cache: true
-  freeze: auto
-server: shiny
+  # cache: true
+  # freeze: auto
 ---
 
 <script>
@@ -20,7 +19,9 @@ document.addEventListener("DOMContentLoaded", function () {
 </script>
 
 ```{r}
-tracks <- source("code/final/preprocess.R")$value
+options(knitr.progress = TRUE, tictoc.verbose = TRUE)
+tracks <- readRDS("data/tracks.rds")
+# tracks <- source("code/final/preprocess.R")$value
 ```
 
 # Overview
@@ -32,28 +33,7 @@ Many notable scholars investigate the features of this music. For example, Kodwo
 Based on this, a dataset of 22 tracks defined as IDM was compiled. This exploratory study poses the research question: How can the musical characteristics of compositions associated with the British IDM movement of the 1990s be identified, and to what extent do they correspond to its definition as experimental electronic music oriented toward attentive listening?
 
 
-# Per-track analysis
-
 ```{r}
-fluidRow(
-  column(
-    width = 2,
-    selectInput(
-      "track_choice",
-      "Track",
-      choices = setNames(tracks$track, tracks$label),
-      selected = tracks$track[1]
-    )
-  ),
-  column(
-    width = 10,
-    plotOutput("chroma_plot", height = "90vh")
-  )
-)
-```
-
-
-```{r, context="server", cache=FALSE}
 
 library(dplyr)
 library(ggplot2)
@@ -84,10 +64,8 @@ plot_chroma <- function(tracks, track_name) {
       y = NULL
     ) +
     theme_minimal() +
-    # scale_x_continuous(expand = c(0, 0)) +
-    # scale_y_discrete(expand = c(0, 0)) +
-    # theme(aspect.ratio = 1) +
-    scale_fill_viridis_c()
+    scale_fill_viridis_c(guide = "none") +
+    theme(legend.position = "none")
 }
 
 plot_timbre <- function(tracks, track_name) {
@@ -111,10 +89,7 @@ plot_timbre <- function(tracks, track_name) {
       fill = "Magnitude"
     ) +
     theme_classic() +
-    # scale_x_continuous(expand = c(0, 0)) +
-    # scale_y_discrete(expand = c(0, 0)) +
-    # theme(aspect.ratio = 1) +
-    scale_fill_viridis_c()
+    scale_fill_viridis_c(guide = "none")
 }
 
 plot_chroma_ssm <- function(tracks, track_name) {
@@ -133,7 +108,7 @@ plot_chroma_ssm <- function(tracks, track_name) {
     ) +
     geom_tile() +
     coord_fixed() +
-    scale_fill_viridis_c() +
+    scale_fill_viridis_c(guide = "none") +
     theme_classic() +
     # scale_x_continuous(expand = c(0, 0)) +
     # scale_y_discrete(expand = c(0, 0)) +
@@ -220,38 +195,47 @@ plot_dft <- function(tracks, track_name) {
     theme_classic()
 }
 
-layout <- "
-AB
-CD
-EE
-FG
-"
+```
 
-output$chroma_plot <- renderPlot({
+# Per-track analysis
+
+::: {.panel-tabset}
+
+```{r, results='asis', fig.height=12, fig.width=16}
+for (i in seq_len(nrow(tracks))) {
   
-  req(input$track_choice)
+  cat("Processing:", tracks$track_clean[i], "\n")
 
-  p1 <- plot_chroma(tracks, input$track_choice)       # A
-  p2 <- plot_timbre(tracks, input$track_choice)       # B
-  p3 <- plot_chroma_ssm(tracks, input$track_choice)   # C
-  p4 <- plot_timbre_ssm(tracks, input$track_choice)   # D
-  p5 <- plot_novelty(tracks, input$track_choice)      # E
-  p6 <- plot_act(tracks, input$track_choice)          # F
-  p7 <- plot_dft(tracks, input$track_choice)          # G
+  track_name <- tracks$track[i]
+  track_title <- tracks$track_clean[i]   # short (tab)
+  full_label <- tracks$label[i]          # full (inside)
 
-  final_plot <- (p1 + p2 + p3 + p4 + p5 + p6 + p7) +
+  # --- TAB TITLE ---
+  cat("## ", track_title, "\n\n")
+
+  # --- HEADER INSIDE TAB ---
+  cat("### ", full_label, "\n\n")
+
+  print(
+    (plot_chroma(tracks, track_name) +
+     plot_timbre(tracks, track_name) +
+     plot_chroma_ssm(tracks, track_name) +
+     plot_timbre_ssm(tracks, track_name) +
+     plot_novelty(tracks, track_name) +
+     plot_act(tracks, track_name) +
+     plot_dft(tracks, track_name)) +
     plot_layout(design = "
       AB
       CD
       EE
       FG
     ")
+  )
 
-  print(final_plot)
-})
-
-
+  cat("\n\n")
+}
 ```
+:::
 
 # Playlist
 
@@ -372,11 +356,46 @@ scatter_plot2 <-
 
 :::: {.panel-tabset .panel-tabset-pills}
 
+
+### Spotify
+
+::: {style="display:grid; grid-template-columns: 1fr 1.35fr; gap: 1rem; align-items:start; min-height: 76vh;"}
+::: {}
+
+####Overview
+
+This part of the study utilizes Spotify-generated features to analyze the relations between the track. The section below conceptualizes the specific variables which are used within the study, as provided by Spotify documentation (). 
+
+####Description
+
+**danceability** = "how suitable a track is for dancing based on ... tempo, rhythm stability, beat strength, and overall regularity."
+**energy** = "perceptual measure of intensity and activity ... fast, loud, and noisy"
+**instrumentalness** = "whether a track contains no vocals"
+**speechiness** = "the presence of spoken words in a track"
+**valence** = "musical positiveness (e.g. happy, cheerful, euphoric ... sad, depressed, angry)"
+
+:::
+::: {}
+```{r, fig.width=9, fig.height=6, out.width='100%'}
+dendro_plot
+```
+:::
+:::
+
+
 ### Dendrogram
 
 ::: {style="display:grid; grid-template-columns: 1fr 1.35fr; gap: 1rem; align-items:start; min-height: 76vh;"}
 ::: {}
-Lorem ipsum dolor sit amet, consectetur adipiscing elit. Morbi mollis metus convallis suscipit porta. Ut semper est a turpis mollis sollicitudin. In auctor semper diam at posuere. Morbi rutrum est quis ipsum auctor, ac placerat purus laoreet. Pellentesque dapibus a ipsum sed cursus. Sed quam ex, semper quis sapien eget, malesuada suscipit purus. Nam dapibus, mauris at scelerisque luctus, dui sem convallis dolor, in volutpat arcu lorem vel velit. Phasellus dapibus, mauris a dignissim finibus, risus diam consequat ligula, dictum egestas justo ex vel orci. Praesent mattis id purus quis consectetur. Aenean vitae lacinia eros. Duis fringilla felis quis justo volutpat, ac ultricies nunc pharetra. Duis fermentum sed enim in vestibulum. Etiam fringilla interdum leo, elementum dignissim arcu ullamcorper eget. Nam interdum at ex eu facilisis. Maecenas vel justo ut tellus rhoncus dictum eget sed erat.
+
+####Overview
+
+This dendrogram explores Spotify-generated features to cluster the similar tracks. The more closely tracks are connected, the more features they share, essentially, manifesting a cluster. 
+
+####Interpretation
+
+This analysis reveals several particular findings. 
+
 :::
 ::: {}
 ```{r, fig.width=9, fig.height=6, out.width='100%'}
@@ -389,7 +408,14 @@ dendro_plot
 
 ::: {style="display:grid; grid-template-columns: 1fr 1.35fr; gap: 1rem; align-items:start; min-height: 76vh;"}
 ::: {}
-Lorem ipsum dolor sit amet, consectetur adipiscing elit. Morbi mollis metus convallis suscipit porta. Ut semper est a turpis mollis sollicitudin. In auctor semper diam at posuere. Morbi rutrum est quis ipsum auctor, ac placerat purus laoreet. Pellentesque dapibus a ipsum sed cursus. Sed quam ex, semper quis sapien eget, malesuada suscipit purus. Nam dapibus, mauris at scelerisque luctus, dui sem convallis dolor, in volutpat arcu lorem vel velit. Phasellus dapibus, mauris a dignissim finibus, risus diam consequat ligula, dictum egestas justo ex vel orci. Praesent mattis id purus quis consectetur. Aenean vitae lacinia eros. Duis fringilla felis quis justo volutpat, ac ultricies nunc pharetra. Duis fermentum sed enim in vestibulum. Etiam fringilla interdum leo, elementum dignissim arcu ullamcorper eget. Nam interdum at ex eu facilisis. Maecenas vel justo ut tellus rhoncus dictum eget sed erat.
+
+####Overview
+
+This heatmap is organized to explore the Spotify-generated composition features. It is employed as an exploratory tool, allowing for manual interpretation of the results. Additionally, a computer-generated clustering is available on the next page. 
+
+####Interpretation
+
+This particular plot provides some important insights. **Instrumentalness** is very steady and it lies around **0.4** for most of the tracks. However, there are some interestig exceptions: *Windowclicker* by Aphex Twin **(-2.3)**, *Flutter* by Autechre **(-2.1)**, and *Cichli* by Autechre **(-2.2)**. These tracks do not content spoken words (except for a french phrase in **Windowclicker** at 2:44), however they are distinct to feature a textured high-frequency vocalization. 
 :::
 ::: {}
 ```{r}
@@ -412,7 +438,15 @@ heatmaply(
 
 ::: {style="display:grid; grid-template-columns: 1fr 1.35fr; gap: 1rem; align-items:start; min-height: 76vh;"}
 ::: {}
-Lorem ipsum dolor sit amet, consectetur adipiscing elit. Morbi mollis metus convallis suscipit porta. Ut semper est a turpis mollis sollicitudin. In auctor semper diam at posuere. Morbi rutrum est quis ipsum auctor, ac placerat purus laoreet. Pellentesque dapibus a ipsum sed cursus. Sed quam ex, semper quis sapien eget, malesuada suscipit purus. Nam dapibus, mauris at scelerisque luctus, dui sem convallis dolor, in volutpat arcu lorem vel velit. Phasellus dapibus, mauris a dignissim finibus, risus diam consequat ligula, dictum egestas justo ex vel orci. Praesent mattis id purus quis consectetur. Aenean vitae lacinia eros. Duis fringilla felis quis justo volutpat, ac ultricies nunc pharetra. Duis fermentum sed enim in vestibulum. Etiam fringilla interdum leo, elementum dignissim arcu ullamcorper eget. Nam interdum at ex eu facilisis. Maecenas vel justo ut tellus rhoncus dictum eget sed erat.
+
+####Overview
+
+This scatter plot reveals the relations between variables provided by Spotify. Namely, it explores how **acousticness** *(x-axis)* is related to **energy** *(y-axis)*, while color of the dot represents the evaluated cluster.
+
+####Interpretation
+
+This analysis reveals several particular findings.
+
 :::
 ::: {}
 ```{r, fig.width=9, fig.height=6, out.width='100%'}
@@ -425,7 +459,15 @@ scatter_plot1
 
 ::: {style="display:grid; grid-template-columns: 1fr 1.35fr; gap: 1rem; align-items:start; min-height: 76vh;"}
 ::: {}
-Lorem ipsum dolor sit amet, consectetur adipiscing elit. Morbi mollis metus convallis suscipit porta. Ut semper est a turpis mollis sollicitudin. In auctor semper diam at posuere. Morbi rutrum est quis ipsum auctor, ac placerat purus laoreet. Pellentesque dapibus a ipsum sed cursus. Sed quam ex, semper quis sapien eget, malesuada suscipit purus. Nam dapibus, mauris at scelerisque luctus, dui sem convallis dolor, in volutpat arcu lorem vel velit. Phasellus dapibus, mauris a dignissim finibus, risus diam consequat ligula, dictum egestas justo ex vel orci. Praesent mattis id purus quis consectetur. Aenean vitae lacinia eros. Duis fringilla felis quis justo volutpat, ac ultricies nunc pharetra. Duis fermentum sed enim in vestibulum. Etiam fringilla interdum leo, elementum dignissim arcu ullamcorper eget. Nam interdum at ex eu facilisis. Maecenas vel justo ut tellus rhoncus dictum eget sed erat.
+
+####Overview
+
+This second scatter plot also servses the same purpose, however it investigates different variables. Specifically, this plot analyzes the relations between **instrumentalness** *(x-axis)* and **speechiness** *(y-axis)*, while color of the dot represents the evaluated cluster.
+
+####Interpretation
+
+This analysis reveals several particular findings.
+
 :::
 ::: {}
 ```{r, fig.width=9, fig.height=6, out.width='100%'}
@@ -440,11 +482,13 @@ scatter_plot2
 
 The chosen dataset has shown two distinct categories: ambient-like pieces and rhythmical compositions. At first, it might seem an unconventional and unexpected finding, giving that the tracks and artists are closely related. However, in fact, it was a somewhat expected result, given the originally mentioned ambiguities within the IDM. In this sense, the lack of visible genre-related distinctions provides a strong ground for conceptualisation of IDM as a movement, rather than a strict genre.
 
-The ambient-like category lacked informative rhythmic data, for this reason it was coined such a way. However, it has particularly flourished in what relates to harmonic properties. These tracks demonstrated a richness in their chromatic and timboral features. Notably, pieces rely on non-functional harmonic progressions and utilize textured sounds. Another peculiar finding is a broad pitch variance that exceeds the traditional tonal frameworks. Arguably, this allows for this music to achieve it's distinct ethereal and alienated feeling. 
+The *ambient-like* category lacked informative rhythmic data, for this reason it was coined such a way. However, it has particularly flourished in what relates to harmonic properties. These tracks demonstrated a richness in their chromatic and timbre features. Another peculiar finding is a broad pitch variance that exceeds the traditional tonal frameworks. Notably, pieces rely on non-functional harmonic progressions and rich chromatic variations. On a timboral level, sound design prioritizes heavy processing, layering and texturing. It is credible to say that in this sense the timbre acts as one of the central elements. Arguably, this expanded pitch space and constantly modulated timbre allow to achieve a distinct both ethereal and alienated feeling. 
 
-Chromatic properties of the tracks
+The *rhythmical* category, on the other hand, is defined by strong rhythmical arrangement. Compositions are rich for events, as the structure is non-rigid and tend to evolve actively and change drastically during the time. On a micro level, rhythmical patterns themselves have shown a highly syncopated and non-linear design. These tendencies for temporal segmentation and percussive articulations can also be particularly interesting for the field of cognitive musicology, as they create a sense of constant, though abrupt and turbulent movement.
 
-The further study with a bigger sample is needed to improve the reliability of these findings.
+At the same time, both categories have shown some commonalities. In general, the chosen tracks are aiming to escape the traditional musical framework to utilize somewhat unexpected techniques and approaches. This tendency towards abstraction makes it hard for categorization using typical musical signifiers, inviting to a rahter interpretative listening. Therefore, despite seeming internal differences, the tracks are actually operating in the same aesthetic logic. Instead of prioritizing clear genre-specific features, they praise experimentation. This allows for continuously rebalanced listening guided by real-time perceptual adjustment rather than fixed expectations. 
+
+As for the future research, a bigger sample is needed to improve the reliability of the findings. It should be considered to employ a more nuanced methodological approach with an explicit focus on identified key elements. For instance, clustering the tonal data or rhythmical complexities would deepen the understanding of the specific mechanisms in a chosen sample.
 
 # References
 

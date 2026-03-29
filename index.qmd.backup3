@@ -1,0 +1,451 @@
+---
+title: "Computational musicology"
+format:
+  dashboard:
+    theme: journal
+execute:
+  echo: false
+  cache: true
+  freeze: auto
+server: shiny
+---
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+  var target = "#overview";
+  if (window.location.hash !== target) {
+    window.location.hash = target;
+  }
+});
+</script>
+
+```{r}
+tracks <- source("code/final/preprocess.R")$value
+```
+
+# Overview
+
+This study aims to explore IDM music. It is generally accepted that this subfield encompasses a fairly broad range of musical compositions, that yet still reflects a certain commonality. From this, certain issues with operationalization stem. Reasonably, what is called IDM is more a characteristic of a specific cultural movement than a concrete, explicit musical genre (). This study pays particular attention to such conceptual criticism and acknowledges its constructed nature. For this reason, it becomes fruitful to examine the roots of this movement to distinguish specific definition. In his book covering the development of electronic music, Simon Reynolds argues that the IDM movement reflects the wide-spanning of a broad electronic movement. Consequently, there is a shift from dancing to the act of listening: *“interest in ‘chill-out’ music as a supplement or sequel to the rave”* (Reynolds 2012.) It is precisely this detachment of the music from rave culture from the outset that becomes its defining feature. Significantly, Reynolds links this concept to the activities of a specific circle of cultural actors. The key institutionalized actor is the Sheffield-based Warp label. He also highlights particular individual actors: Squarepusher, Aphex Twin, μ-Ziq, Autechre, Boards of Canada, and others. That is, IDM music is understood as a network of closely connected artists originating from the UK during the 1990s, rather than as a distinct genre.
+
+Many notable scholars investigate the features of this music. For example, Kodwo Eshun (1998) notes that such music should be framed as a form of sonic experimentation. Musicians often play with various musical elements to achieve a futuristic, abstract, and unusual sound. The practice of exploring digital timbre gives rise to unconventional musical elements and structures. For instance, *We Are the Music Makers* by Aphex Twin () is described as: *“long stretches of just beats and bass-fuzz, teasing you with intermittent flickers of twinkly synth in the farthest corner of the soundscape,”* while *Pulsewidth* is literally *“ambient techno”* (Reynolds 2012). The use of such and other musical approaches is of great interest to musicology. It offers an opportunity to look beyond conventional solutions and, consequently, to expand the concept of what we understand as music.
+
+Based on this, a dataset of 22 tracks defined as IDM was compiled. This exploratory study poses the research question: How can the musical characteristics of compositions associated with the British IDM movement of the 1990s be identified, and to what extent do they correspond to its definition as experimental electronic music oriented toward attentive listening?
+
+
+# Per-track analysis
+
+```{r}
+fluidRow(
+  column(
+    width = 2,
+    selectInput(
+      "track_choice",
+      "Track",
+      choices = setNames(tracks$track, tracks$label),
+      selected = tracks$track[1]
+    )
+  ),
+  column(
+    width = 10,
+    plotOutput("chroma_plot", height = "90vh")
+  )
+)
+```
+
+
+```{r, context="server", cache=FALSE}
+
+library(dplyr)
+library(ggplot2)
+library(purrr)
+library(tidyverse)
+library(compmus)
+library(patchwork)
+
+# tracks <- source("code/final/preprocess.R")$value
+
+plot_chroma <- function(tracks, track_name) {
+  tracks |>
+    dplyr::filter(track == track_name) |>
+    dplyr::pull(chroma_proc) |>
+    purrr::pluck(1) |>
+    ggplot(
+      aes(
+        x = start + duration / 2,
+        width = duration,
+        y = pitch_class,
+        fill = value
+      )
+    ) +
+    geom_tile() +
+    labs(
+      subtitle = "chromagram",
+      x = "Time (s)",
+      y = NULL
+    ) +
+    theme_minimal() +
+    # scale_x_continuous(expand = c(0, 0)) +
+    # scale_y_discrete(expand = c(0, 0)) +
+    # theme(aspect.ratio = 1) +
+    scale_fill_viridis_c()
+}
+
+plot_timbre <- function(tracks, track_name) {
+  tracks |>
+    dplyr::filter(track == track_name) |>
+    dplyr::pull(timbre_proc) |>
+    purrr::pluck(1) |>
+    ggplot(
+      aes(
+        x = start + duration / 2,
+        width = duration,
+        y = mfcc,
+        fill = value
+      )
+    ) +
+    geom_tile() +
+    labs(
+      subtitle = "cepstrogram",
+      x = "Time (s)",
+      y = NULL,
+      fill = "Magnitude"
+    ) +
+    theme_classic() +
+    # scale_x_continuous(expand = c(0, 0)) +
+    # scale_y_discrete(expand = c(0, 0)) +
+    # theme(aspect.ratio = 1) +
+    scale_fill_viridis_c()
+}
+
+plot_chroma_ssm <- function(tracks, track_name) {
+  tracks |>
+    dplyr::filter(track == track_name) |>
+    dplyr::pull(chroma_ssm) |>
+    purrr::pluck(1) |>
+    ggplot(
+      aes(
+        x = xstart + xduration / 2,
+        width = 50 * xduration,
+        y = ystart + yduration / 2,
+        height = 50 * yduration,
+        fill = d
+      )
+    ) +
+    geom_tile() +
+    coord_fixed() +
+    scale_fill_viridis_c() +
+    theme_classic() +
+    # scale_x_continuous(expand = c(0, 0)) +
+    # scale_y_discrete(expand = c(0, 0)) +
+    # theme(aspect.ratio = 1) +
+    labs(subtitle = "chroma self-similarity", x = "", y = "")
+}
+
+plot_timbre_ssm <- function(tracks, track_name) {
+  tracks |>
+    dplyr::filter(track == track_name) |>
+    dplyr::pull(timbre_ssm) |>
+    purrr::pluck(1) |>
+    ggplot(
+      aes(
+        x = xstart + xduration / 2,
+        width = 50 * xduration,
+        y = ystart + yduration / 2,
+        height = 50 * yduration,
+        fill = d
+      )
+    ) +
+    geom_tile() +
+    coord_fixed() +
+    scale_fill_viridis_c(guide = "none") +
+    theme_classic() +
+    # scale_x_continuous(expand = c(0, 0)) +
+    # scale_y_discrete(expand = c(0, 0)) +
+    # theme(aspect.ratio = 1) +
+    labs(subtitle = "timbre self-similarity", x = "", y = "")
+}
+
+plot_novelty <- function(tracks, track_name) {
+  tracks |>
+    dplyr::filter(track == track_name) |>
+    dplyr::pull(novelty) |>
+    purrr::pluck(1) |>
+    ggplot(aes(x = start, y = novelty)) +
+    geom_line() +
+    theme_minimal() +
+    labs(
+      subtitle = "novelty function",
+      x = "Time (s)",
+      y = "Novelty"
+    )
+}
+
+plot_act <- function(tracks, track_name) {
+  tracks |>
+    dplyr::filter(track == track_name) |>
+    dplyr::pull(tempogram_act) |>
+    purrr::pluck(1) |>
+    pivot_longer(-TIME, names_to = "tempo", values_to = "value") |>
+    mutate(tempo = as.numeric(tempo)) |>
+    ggplot(aes(x = TIME, y = tempo, fill = value)) +
+    geom_raster() +
+    scale_y_continuous(
+      transform = c("reciprocal", "reverse"),
+      breaks = seq(50, 350, 100)
+    ) +
+    scale_fill_viridis_c(guide = "none") +
+    labs(
+      subtitle = "autocorrelation tempogram",
+      x = "Time (s)",
+      y = "Tempo (BPM)"
+    ) +
+    theme_classic()
+}
+
+plot_dft <- function(tracks, track_name) {
+  tracks |>
+    dplyr::filter(track == track_name) |>
+    dplyr::pull(tempogram_dft) |>
+    purrr::pluck(1) |>
+    pivot_longer(-TIME, names_to = "tempo", values_to = "value") |>
+    mutate(tempo = as.numeric(tempo)) |>
+    ggplot(aes(x = TIME, y = tempo, fill = value)) +
+    geom_raster() +
+    scale_fill_viridis_c(guide = "none") +
+    labs(
+      subtitle = "fourier tempogram",
+      x = "Time (s)",
+      y = "Tempo (BPM)"
+    ) +
+    theme_classic()
+}
+
+layout <- "
+AB
+CD
+EE
+FG
+"
+
+output$chroma_plot <- renderPlot({
+  
+  req(input$track_choice)
+
+  p1 <- plot_chroma(tracks, input$track_choice)       # A
+  p2 <- plot_timbre(tracks, input$track_choice)       # B
+  p3 <- plot_chroma_ssm(tracks, input$track_choice)   # C
+  p4 <- plot_timbre_ssm(tracks, input$track_choice)   # D
+  p5 <- plot_novelty(tracks, input$track_choice)      # E
+  p6 <- plot_act(tracks, input$track_choice)          # F
+  p7 <- plot_dft(tracks, input$track_choice)          # G
+
+  final_plot <- (p1 + p2 + p3 + p4 + p5 + p6 + p7) +
+    plot_layout(design = "
+      AB
+      CD
+      EE
+      FG
+    ")
+
+  print(final_plot)
+})
+
+
+```
+
+# Playlist
+
+```{r}
+library(tidyverse)
+library(tidymodels)
+library(ggdendro)
+library(patchwork)
+library(heatmaply)
+
+warp <- read_csv("datasets/final/warp_playlist.csv")
+
+warp_features <-
+  warp |>
+  mutate(
+    label = paste(`Artist Name(s)`, "–", `Track Name`),
+    label = stringr::str_trunc(label, 40)  # optional but recommended
+  ) |>
+  select(
+    label,
+    Danceability,
+    Energy,
+    Loudness,
+    Speechiness,
+    Acousticness,
+    Instrumentalness,
+    Liveness,
+    Valence,
+    Tempo,
+    `Duration (ms)`
+  )
+
+warp_juice <-
+  recipe(
+    label ~ .,
+    data = warp_features
+  ) |>
+  step_center(all_predictors()) |>
+  step_scale(all_predictors()) |>
+  prep() |>
+  juice() |>
+  column_to_rownames("label")
+
+warp_dist <- dist(warp_juice, method = "euclidean")
+warp_hc <- hclust(warp_dist, method = "average")
+
+dendro_plot <-
+  warp_hc |>
+  dendro_data() |>
+  ggdendrogram(rotate = TRUE) +
+  theme_minimal() +
+  theme(axis.text.y = element_text(size = 6)) +
+  labs(title = "Dendrogram")
+
+heatmap_plot <-
+  warp_juice |>
+  as.data.frame() |>
+  rownames_to_column("label") |>
+  
+  # reorder by clustering
+  mutate(label = factor(label, levels = warp_hc$labels[warp_hc$order])) |>
+  
+  pivot_longer(-label, names_to = "feature", values_to = "value") |>
+  
+  ggplot(aes(x = feature, y = label, fill = value)) +
+  geom_tile() +
+  labs(title = "Feature heatmap", x = NULL, y = NULL) +
+  theme_minimal() +
+  theme(
+    axis.text.y = element_text(size = 6)
+  )
+
+warp_clusters <- cutree(warp_hc, k = 2)
+
+warp_plot_data <-
+  warp_features |>
+  mutate(cluster = factor(warp_clusters[label]))
+
+scatter_plot1 <-
+  warp_plot_data |>
+  ggplot(aes(
+    x = Acousticness,
+    y = Energy,
+    colour = cluster,
+    size = Energy
+  )) +
+  geom_point(alpha = 0.8) +
+  scale_color_viridis_d() +
+  theme_minimal() +
+  labs(
+    title = "Acousticness vs Energy",
+    x = "Acousticness",
+    y = "Energy",
+    colour = "Cluster",
+    size = "Energy"
+  )
+
+scatter_plot2 <-
+  warp_plot_data |>
+  ggplot(aes(
+    x = Instrumentalness,
+    y = Speechiness,
+    colour = cluster,
+    size = Energy
+  )) +
+  geom_point(alpha = 0.8) +
+  scale_color_viridis_d() +
+  theme_minimal() +
+  labs(
+    title = "Instrumentalness vs Speechiness",
+    x = "Instrumentalness",
+    y = "Speechiness",
+    colour = "Cluster",
+    size = "Energy"
+  )
+
+```
+
+:::: {.panel-tabset .panel-tabset-pills}
+
+### Dendrogram
+
+::: {style="display:grid; grid-template-columns: 1fr 1.35fr; gap: 1rem; align-items:start; min-height: 76vh;"}
+::: {}
+Lorem ipsum dolor sit amet, consectetur adipiscing elit. Morbi mollis metus convallis suscipit porta. Ut semper est a turpis mollis sollicitudin. In auctor semper diam at posuere. Morbi rutrum est quis ipsum auctor, ac placerat purus laoreet. Pellentesque dapibus a ipsum sed cursus. Sed quam ex, semper quis sapien eget, malesuada suscipit purus. Nam dapibus, mauris at scelerisque luctus, dui sem convallis dolor, in volutpat arcu lorem vel velit. Phasellus dapibus, mauris a dignissim finibus, risus diam consequat ligula, dictum egestas justo ex vel orci. Praesent mattis id purus quis consectetur. Aenean vitae lacinia eros. Duis fringilla felis quis justo volutpat, ac ultricies nunc pharetra. Duis fermentum sed enim in vestibulum. Etiam fringilla interdum leo, elementum dignissim arcu ullamcorper eget. Nam interdum at ex eu facilisis. Maecenas vel justo ut tellus rhoncus dictum eget sed erat.
+:::
+::: {}
+```{r, fig.width=9, fig.height=6, out.width='100%'}
+dendro_plot
+```
+:::
+:::
+
+### Heatmap
+
+::: {style="display:grid; grid-template-columns: 1fr 1.35fr; gap: 1rem; align-items:start; min-height: 76vh;"}
+::: {}
+Lorem ipsum dolor sit amet, consectetur adipiscing elit. Morbi mollis metus convallis suscipit porta. Ut semper est a turpis mollis sollicitudin. In auctor semper diam at posuere. Morbi rutrum est quis ipsum auctor, ac placerat purus laoreet. Pellentesque dapibus a ipsum sed cursus. Sed quam ex, semper quis sapien eget, malesuada suscipit purus. Nam dapibus, mauris at scelerisque luctus, dui sem convallis dolor, in volutpat arcu lorem vel velit. Phasellus dapibus, mauris a dignissim finibus, risus diam consequat ligula, dictum egestas justo ex vel orci. Praesent mattis id purus quis consectetur. Aenean vitae lacinia eros. Duis fringilla felis quis justo volutpat, ac ultricies nunc pharetra. Duis fermentum sed enim in vestibulum. Etiam fringilla interdum leo, elementum dignissim arcu ullamcorper eget. Nam interdum at ex eu facilisis. Maecenas vel justo ut tellus rhoncus dictum eget sed erat.
+:::
+::: {}
+```{r}
+heatmaply(
+  warp_juice,
+  dendrogram = "none",
+  hclustfun = hclust,
+  hclust_method = "average",
+  dist_method = "euclidean",
+  fontsize_row = 7,
+  fontsize_col = 7,
+  width = NULL,
+  height = NULL
+)
+```
+:::
+:::
+
+### Cluster
+
+::: {style="display:grid; grid-template-columns: 1fr 1.35fr; gap: 1rem; align-items:start; min-height: 76vh;"}
+::: {}
+Lorem ipsum dolor sit amet, consectetur adipiscing elit. Morbi mollis metus convallis suscipit porta. Ut semper est a turpis mollis sollicitudin. In auctor semper diam at posuere. Morbi rutrum est quis ipsum auctor, ac placerat purus laoreet. Pellentesque dapibus a ipsum sed cursus. Sed quam ex, semper quis sapien eget, malesuada suscipit purus. Nam dapibus, mauris at scelerisque luctus, dui sem convallis dolor, in volutpat arcu lorem vel velit. Phasellus dapibus, mauris a dignissim finibus, risus diam consequat ligula, dictum egestas justo ex vel orci. Praesent mattis id purus quis consectetur. Aenean vitae lacinia eros. Duis fringilla felis quis justo volutpat, ac ultricies nunc pharetra. Duis fermentum sed enim in vestibulum. Etiam fringilla interdum leo, elementum dignissim arcu ullamcorper eget. Nam interdum at ex eu facilisis. Maecenas vel justo ut tellus rhoncus dictum eget sed erat.
+:::
+::: {}
+```{r, fig.width=9, fig.height=6, out.width='100%'}
+scatter_plot1
+```
+:::
+:::
+
+### Cluster 2
+
+::: {style="display:grid; grid-template-columns: 1fr 1.35fr; gap: 1rem; align-items:start; min-height: 76vh;"}
+::: {}
+Lorem ipsum dolor sit amet, consectetur adipiscing elit. Morbi mollis metus convallis suscipit porta. Ut semper est a turpis mollis sollicitudin. In auctor semper diam at posuere. Morbi rutrum est quis ipsum auctor, ac placerat purus laoreet. Pellentesque dapibus a ipsum sed cursus. Sed quam ex, semper quis sapien eget, malesuada suscipit purus. Nam dapibus, mauris at scelerisque luctus, dui sem convallis dolor, in volutpat arcu lorem vel velit. Phasellus dapibus, mauris a dignissim finibus, risus diam consequat ligula, dictum egestas justo ex vel orci. Praesent mattis id purus quis consectetur. Aenean vitae lacinia eros. Duis fringilla felis quis justo volutpat, ac ultricies nunc pharetra. Duis fermentum sed enim in vestibulum. Etiam fringilla interdum leo, elementum dignissim arcu ullamcorper eget. Nam interdum at ex eu facilisis. Maecenas vel justo ut tellus rhoncus dictum eget sed erat.
+:::
+::: {}
+```{r, fig.width=9, fig.height=6, out.width='100%'}
+scatter_plot2
+```
+:::
+:::
+
+::::
+
+# Conclusions
+
+The chosen dataset has shown two distinct categories: ambient-like pieces and rhythmical compositions. At first, it might seem an unconventional and unexpected finding, giving that the tracks and artists are closely related. However, in fact, it was a somewhat expected result, given the originally mentioned ambiguities within the IDM. In this sense, the lack of visible genre-related distinctions provides a strong ground for conceptualisation of IDM as a movement, rather than a strict genre.
+
+The ambient-like category lacked informative rhythmic data, for this reason it was coined such a way. However, it has particularly flourished in what relates to harmonic properties. These tracks demonstrated a richness in their chromatic and timboral features. Notably, pieces rely on non-functional harmonic progressions and utilize textured sounds. Another peculiar finding is a broad pitch variance that exceeds the traditional tonal frameworks. Arguably, this allows for this music to achieve it's distinct ethereal and alienated feeling. 
+
+Chromatic properties of the tracks
+
+The further study with a bigger sample is needed to improve the reliability of these findings.
+
+# References
+
+123

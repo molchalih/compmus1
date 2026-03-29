@@ -1,5 +1,3 @@
-# --- this parses CSVs into an interactable object-like entity ----
-
 library(tidyverse)
 library(compmus)
 library(patchwork)
@@ -8,8 +6,8 @@ library(ggplot2)
 
 # --- configuration for per-track features generation ----
 config <- list(
-  tracks = c("tha"), # "all" for every track
-  # tracks = c("all"), # "all" for every track
+  # tracks = c("tha", "avril14th")
+  tracks = c("all"), # "all" for every track
   chroma = TRUE,
   timbre = TRUE,
   chroma_ssm = TRUE,
@@ -21,7 +19,6 @@ config <- list(
   tempogram_dft = TRUE
 )
 
-# selected_track <- "xtal"
 
 # --- a caching file to reduce expensive per-track recalculations unless neccessary ----
 track_cache_key <- {
@@ -33,9 +30,11 @@ track_cache_key <- {
   }
 }
 
+
 enabled_features <- names(config)[
-  vapply(config, is.logical, logical(1)) & unlist(config[vapply(config, is.logical, logical(1))])
+  sapply(config, function(x) isTRUE(x))
 ]
+
 
 cache_file <- paste0(
   "tracks_cache_",
@@ -167,17 +166,45 @@ if (file.exists(cache_file)) {
   
   selected_tracks <- config$tracks
   
-tracks <- tibble(
-  chroma_file = list.files("datasets/final/chroma", "*.csv", full.names = TRUE)
-) |>
+  # --- LOAD CLEAN METADATA FROM MP3 FILES ---
+  clean_string <- function(x) {
+    x |>
+      str_to_lower() |>
+      str_replace_all("[^a-z0-9]", "")
+  }
+  
+  songs <- tibble(
+    file = list.files("songs/downloaded", "*.mp3", full.names = TRUE)
+  ) |>
+    mutate(
+      name = basename(file) |> tools::file_path_sans_ext(),
+      artist = str_split(name, " - ") |> map_chr(1),
+      track  = str_split(name, " - ") |> map_chr(2),
+      track_key = clean_string(track)
+    )
+  
+  # --- LOAD CSV TRACK FILES ---
+  tracks <- tibble(
+    chroma_file = list.files("datasets/final/chroma", "*.csv", full.names = TRUE)
+  ) |>
     mutate(
       name = basename(chroma_file),
+      name_key = clean_string(tools::file_path_sans_ext(name))
+    ) |>
+    
+    # --- MATCH CSVs TO MP3 METADATA ---
+    rowwise() |>
+    mutate(
+      match = list(
+        songs |>
+          filter(str_detect(name_key, paste0(track_key, "$"))) |>
+          slice(1)
+      ),
       
-      track = name |>
-        tools::file_path_sans_ext() |>
-        stringr::str_remove("^[^_]+_[^_]+_") |>
-        stringr::str_replace_all("_", "")
-    )
+      artist = if (nrow(match) == 0) NA else match$artist,
+      track  = if (nrow(match) == 0) NA else match$track
+    ) |>
+    ungroup()
 
 if (!is.null(selected_tracks) && !(length(selected_tracks) == 1 && tolower(selected_tracks) == "all")) {
   tracks <- tracks |>
@@ -186,138 +213,140 @@ if (!is.null(selected_tracks) && !(length(selected_tracks) == 1 && tolower(selec
 
 tracks <- tracks |>
     
-    mutate(
-      timbre_file = file.path("datasets/final/timbre", name),
-      
-      chroma = map(chroma_file, read_csv),
-      timbre = map(timbre_file, read_csv),
-      
-      artist = str_extract(name, "^[^_]+_[^_]+")
-    ) |>
+  mutate(
+    timbre_file = file.path("datasets/final/timbre", name),
+    
+    chroma = map(chroma_file, read_csv),
+    timbre = map(timbre_file, read_csv),
+  ) |>
+  
+  # --- WRANGLE FOR LATER REUSABILITY ---
+  mutate(
+    chroma_wrangled = map(chroma, \(df)
+                          compmus_wrangle_chroma(df)
+    ),
+    
+    timbre_wrangled = map(timbre, \(df)
+                          compmus_wrangle_timbre(df)
+    )
+  ) |>
   
   mutate(
-      
-      # --- CHROMA PROCESSING ---
-      chroma_proc = map2(chroma, track, \(df, name)
-                         safe_compute(config$chroma, paste("Chroma proc:", name), {
-                           df |>
-                             compmus_wrangle_chroma() |>
-                             mutate(pitches = map(pitches, compmus_normalise, "euclidean")) |>
-                             compmus_gather_chroma()
-                         })
-      ),
-      
-      # --- TIMBRE PROCESSING ---
-      timbre_proc = map2(timbre, track, \(df, name)
-                         safe_compute(config$timbre, paste("Timbre proc:", name), {
-                           df |>
-                             compmus_wrangle_timbre() |>
-                             mutate(timbre = map(timbre, compmus_normalise, "manhattan")) |>
-                             compmus_gather_timbre()
-                         })
-      ),
-      
-      # --- TIMBRE SSM ---
-      timbre_ssm = map2(timbre, track, \(df, name)
-                        safe_compute(config$timbre_ssm, paste("Timbre SSM:", name), {
-                          df |>
-                            compmus_wrangle_timbre() |> 
-                            filter(row_number() %% 50L == 0L) |> 
-                            mutate(timbre = map(timbre, compmus_normalise, "euclidean")) |>
-                            compmus_self_similarity(timbre, "cosine")
-                        })
-      ),
-      
-      # --- CHROMA SSM ---
-      chroma_ssm = map2(chroma, track, \(df, name)
-                        safe_compute(config$chroma_ssm, paste("Chroma SSM:", name), {
-                          df |>
-                            compmus_wrangle_chroma() |>
-                            filter(row_number() %% 50L == 0L) |>
-                            mutate(pitches = map(pitches, compmus_normalise, "euclidean")) |>
-                            compmus_self_similarity(pitches, "cosine")
-                        })
-      ),
-      
-      # --- CHORDOGRAMS ---
-      chordogram = map2(chroma, track, \(df, name)
-                        safe_compute(config$chordogram, paste("Chordogram:", name), {
-                          df |>
-                            compmus_wrangle_chroma() |>
-                            filter(row_number() %% 20L == 0L) |>
-                            compmus_match_pitch_template(
-                              chord_templates,
-                              method = "cosine",
-                              norm = "euclidean"
-                            )
-                        })
-      ),
-      
-      # --- KEYGRAMS ---
-      keygram = map2(chroma, track, \(df, name)
-                     safe_compute(config$keygram, paste("Keygram:", name), {
-                       df |>
-                         compmus_wrangle_chroma() |>
-                         filter(row_number() %% 50L == 0L) |>
-                         compmus_match_pitch_template(
-                           key_templates,
-                           method = "cosine",
-                           norm = "manhattan"
-                         )
-                     })
-      ),
-      
-      # --- NOVELTY FUNCTION ---
-      novelty = pmap(list(artist, track, name), \(artist, track, name)
-                     safe_compute(config$novelty, paste("Novelty:", track), {
-                       
-                       read_csv(
-                         paste0("datasets/final/tempo_novelty/", name),
-                         show_col_types = FALSE
+    # --- CHROMA PROCESSING ---
+    chroma_proc = map2(chroma_wrangled, track, \(df, name)
+                       safe_compute(config$chroma, paste("Chroma proc:", name), {
+                         df |>
+                           mutate(pitches = map(pitches, compmus_normalise, "euclidean")) |>
+                           compmus_gather_chroma()
+                       })
+    ),
+    
+    # --- TIMBRE PROCESSING ---
+    timbre_proc = map2(timbre_wrangled, track, \(df, name)
+                       safe_compute(config$timbre, paste("Timbre proc:", name), {
+                         df |>
+                           mutate(timbre = map(timbre, compmus_normalise, "manhattan")) |>
+                           compmus_gather_timbre()
+                       })
+    ),
+    
+    # --- TIMBRE SSM ---
+    timbre_ssm = map2(timbre_wrangled, track, \(df, name)
+                      safe_compute(config$timbre_ssm, paste("Timbre SSM:", name), {
+                        df |>
+                          slice(seq(1, n(), by = 50)) |>
+                          mutate(timbre = map(timbre, compmus_normalise, "euclidean")) |>
+                          compmus_self_similarity(timbre, "cosine")
+                      })
+    ),
+    
+    # --- CHROMA SSM ---
+    chroma_ssm = map2(chroma_wrangled, track, \(df, name)
+                      safe_compute(config$chroma_ssm, paste("Chroma SSM:", name), {
+                        df |>
+                          slice(seq(1, n(), by = 50)) |>   # optional optimization
+                          mutate(pitches = map(pitches, compmus_normalise, "euclidean")) |>
+                          compmus_self_similarity(pitches, "cosine")
+                      })
+    ),
+    
+    # --- CHORDOGRAMS ---
+    chordogram = map2(chroma_wrangled, track, \(df, name)
+                      safe_compute(config$chordogram, paste("Chordogram:", name), {
+                        df |>
+                          slice(seq(1, n(), by = 20)) |>
+                          compmus_match_pitch_template(
+                            chord_templates,
+                            method = "cosine",
+                            norm = "euclidean"
+                          )
+                      })
+    ),
+    
+    # --- KEYGRAMS ---
+    keygram = map2(chroma_wrangled, track, \(df, name)
+                   safe_compute(config$keygram, paste("Keygram:", name), {
+                     df |>
+                       slice(seq(1, n(), by = 50)) |>
+                       compmus_match_pitch_template(
+                         key_templates,
+                         method = "cosine",
+                         norm = "manhattan"
+                       )
+                   })
+    ),
+    
+    # --- NOVELTY FUNCTION ---
+    novelty = pmap(list(artist, track, name), \(artist, track, name)
+                   safe_compute(config$novelty, paste("Novelty:", track), {
+                     
+                     read_csv(
+                       paste0("datasets/final/tempo_novelty/", name),
+                       show_col_types = FALSE
+                     ) |>
+                       select(TIME, VALUE) |>
+                       rename(
+                         start = TIME,
+                         novelty = VALUE
                        ) |>
-                         select(TIME, VALUE) |>
-                         rename(
-                           start = TIME,
-                           novelty = VALUE
-                         ) |>
-                         filter(start <= 30) |>
-                         mutate(
-                           duration = lead(start, default = last(start)) - start
-                         )
-                     })
-      ),
-      
-      # --- ACT FUNCTION ---
-      tempogram_act = pmap(list(artist, track, name), \(artist, track, name)
-                           safe_compute(config$tempogram_act, paste("ACT:", track), {
-                             
-                             read_csv(
-                               paste0("datasets/final/tempo_act/", name),
-                               show_col_types = FALSE
-                             ) |>
-                               filter(TIME <= 30)
-                           })
-      ),
-      
-      # --- DFT FUNCTION ---
-      tempogram_dft = pmap(list(artist, track, name), \(artist, track, name)
-                           safe_compute(config$tempogram_dft, paste("DFT:", track), {
-                             
-                             read_csv(
-                               paste0("datasets/final/tempo_dft/", name),
-                               show_col_types = FALSE
-                             ) |>
-                               filter(TIME <= 30)
-                           })
-      )
-      
+                       filter(start <= 30) |>
+                       mutate(
+                         duration = lead(start, default = last(start)) - start
+                       )
+                   })
+    ),
+    
+    # --- ACT FUNCTION ---
+    tempogram_act = pmap(list(artist, track, name), \(artist, track, name)
+                         safe_compute(config$tempogram_act, paste("ACT:", track), {
+                           
+                           read_csv(
+                             paste0("datasets/final/tempo_act/", name),
+                             show_col_types = FALSE
+                           ) |>
+                             filter(TIME <= 30)
+                         })
+    ),
+    
+    # --- DFT FUNCTION ---
+    tempogram_dft = pmap(list(artist, track, name), \(artist, track, name)
+                         safe_compute(config$tempogram_dft, paste("DFT:", track), {
+                           
+                           read_csv(
+                             paste0("datasets/final/tempo_dft/", name),
+                             show_col_types = FALSE
+                           ) |>
+                             filter(TIME <= 30)
+                         })
     )
+    
+  )
 
   # --- LABELS FOR UI ---
   tracks <- tracks |>
     mutate(
-      artist_clean = stringr::str_to_title(stringr::str_replace_all(artist, "_", " ")),
-      track_clean  = stringr::str_to_title(stringr::str_replace_all(track, "_", " ")),
+      artist_clean = artist,
+      track_clean  = track,
       label = paste(artist_clean, "–", track_clean)
     )
   
@@ -327,6 +356,7 @@ tracks <- tracks |>
 }
 
 tracks
+saveRDS(tracks, "data/tracks.rds")
 
 # --- view generated results  ----
 # chroma_plot <- tracks |>
