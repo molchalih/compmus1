@@ -1,0 +1,298 @@
+---
+title: "Computational musicology"
+format:
+  dashboard:
+    theme: journal
+execute:
+  echo: false
+  cache: true
+  freeze: auto
+---
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+  var target = "#overview";
+  if (window.location.hash !== target) {
+    window.location.hash = target;
+  }
+});
+</script>
+
+# Overview
+
+```{r}
+
+# --- this parses CSVs into an interactable object-like entity ----
+
+library(tidyverse)
+library(compmus)
+library(patchwork)
+
+cache_file <- "tracks_cache_v1.rds"
+
+if (file.exists(cache_file)) {
+
+  message("Loading cached tracks...")
+  tracks <- readRDS(cache_file)
+
+} else {
+
+  message("Computing tracks from scratch...")
+
+  tracks <- tibble(
+    chroma_file = list.files("datasets/final/chroma", "*.csv", full.names = TRUE)
+  ) |>
+    mutate(
+      name = basename(chroma_file),
+      timbre_file = file.path("datasets/final/timbre", name),
+
+      chroma = map(chroma_file, read_csv),
+      timbre = map(timbre_file, read_csv),
+
+      artist = str_extract(name, "^[^_]+_[^_]+"),
+      track  = str_remove(name, "^[^_]+_[^_]+_") |> str_remove(".csv")
+    ) |>
+    mutate(
+      
+      # --- CHROMA PROCESSING ---
+      chroma_proc = map(chroma, \(df)
+        df |>
+          compmus_wrangle_chroma() |>
+          mutate(pitches = map(pitches, compmus_normalise, "euclidean")) |>
+          compmus_gather_chroma()
+      ),
+      
+      # --- TIMBRE PROCESSING ---
+      timbre_proc = map(timbre, \(df)
+        df |>
+          compmus_wrangle_timbre() |>
+          mutate(timbre = map(timbre, compmus_normalise, "manhattan")) |>
+          compmus_gather_timbre()
+      ),
+      
+      # --- TIMBRE SSM ---
+      timbre_ssm = map(timbre, \(df)
+        df |>
+          compmus_wrangle_timbre() |> 
+          filter(row_number() %% 50L == 0L) |> 
+          mutate(timbre = map(timbre, compmus_normalise, "euclidean")) |>
+          compmus_self_similarity(timbre, "cosine")
+      ),
+      
+      # --- CHROMA SSM ---
+      chroma_ssm = map(chroma, \(df)
+        df |>
+          compmus_wrangle_chroma() |>
+          filter(row_number() %% 50L == 0L) |>
+          mutate(pitches = map(pitches, compmus_normalise, "euclidean")) |>
+          compmus_self_similarity(pitches, "cosine")
+      )
+    )
+
+  saveRDS(tracks, cache_file)
+}
+
+```
+
+
+This study aims to explore IDM music. It is generally accepted that this subfield encompasses a fairly broad range of musical compositions, that yet still reflects a certain commonality. From this, certain issues with operationalization stem. Reasonably, what is called IDM is more a characteristic of a specific cultural movement than a concrete, explicit musical genre (). This study pays particular attention to such conceptual criticism and acknowledges its constructed nature. For this reason, it becomes fruitful to examine the roots of this movement to distinguish specific definition. In his book covering the development of electronic music, Simon Reynolds argues that the IDM movement reflects the wide-spanning of a broad electronic movement. Consequently, there is a shift from dancing to the act of listening: *“interest in ‘chill-out’ music as a supplement or sequel to the rave.”* (Simon Reynolds …) It is precisely this detachment of the music from rave culture from the outset that becomes its defining feature. Significantly, Reynolds links this concept to the activities of a specific circle of cultural actors. The key institutionalized actor is the Sheffield-based Warp label. He also highlights particular individual actors: Squarepusher, Aphex Twin, μ-Ziq, Autechre, Boards of Canada, and others. That is, IDM music is understood as a network of closely connected artists originating from the UK during the 1990s, rather than as a distinct genre.
+
+Many notable scholars investigate the features of this music. For example, Kodwo Eshun notes that such music should be framed as a form of sonic experimentation. Musicians often play with various musical elements to achieve a futuristic, abstract, and unusual sound. The practice of exploring digital timbre gives rise to unconventional musical elements and structures. For instance, *We Are the Music Makers* by Aphex Twin () is described as: *“long stretches of just beats and bass-fuzz, teasing you with intermittent flickers of twinkly synth in the farthest corner of the soundscape,”* while *Pulsewidth* is literally *“ambient techno”* (Simon Reynolds ...). The use of such and other musical approaches is of great interest to musicology. It offers an opportunity to look beyond conventional solutions and, consequently, to expand the concept of what we understand as music.
+
+Based on this, a dataset of 22 tracks defined as IDM was compiled. This exploratory study poses the research question: How can the musical characteristics of compositions associated with the British IDM movement of the 1990s be identified, and to what extent do they correspond to its definition as experimental electronic music oriented toward attentive listening?
+
+```{r}
+
+
+chroma_plot <- tracks |>
+  filter(track == "xtal") |>
+  pull(chroma_proc) |>
+  purrr::pluck(1) |>
+  ggplot(
+    aes(
+      x = start + duration / 2,
+      width = duration,
+      y = pitch_class,
+      fill = value
+    )
+  ) +
+  geom_tile() +
+  labs(subtitle = "chromagram", x = "Time (s)", y = NULL) +
+  theme_minimal() +
+  scale_fill_viridis_c()
+
+timbre_plot <- tracks |>
+  filter(track == "xtal") |>
+  pull(timbre_proc) |>
+  purrr::pluck(1) |>
+  ggplot(
+    aes(
+      x = start + duration / 2,
+      width = duration,
+      y = mfcc,
+      fill = value
+    )
+  ) +
+  geom_tile() +
+  labs(subtitle = "cepstrogram", x = "Time (s)", y = NULL, fill = "Magnitude") +
+  theme_classic() +
+  scale_fill_viridis_c()
+
+timbre_ssm_plot <- tracks |>
+  filter(track == "xtal") |>
+  pull(timbre_ssm) |>
+  purrr::pluck(1) |>
+  ggplot(
+    aes(
+      x = xstart + xduration / 2,
+      width = 50 * xduration,
+      y = ystart + yduration / 2,
+      height = 50 * yduration,
+      fill = d
+    )
+  ) +
+  geom_tile() +
+  coord_fixed() +
+  scale_fill_viridis_c(guide = "none") +
+  theme_classic() +
+  labs(subtitle = "timbre self-similarity", x = "", y = "")
+
+chroma_ssm_plot <- tracks |>
+  filter(track == "xtal") |>
+  pull(chroma_ssm) |>
+  purrr::pluck(1) |>
+  ggplot(
+    aes(
+      x = xstart + xduration / 2,
+      width = 50 * xduration,
+      y = ystart + yduration / 2,
+      height = 50 * yduration,
+      fill = d
+    )
+  ) +
+  geom_tile() +
+  coord_fixed() +
+  scale_fill_viridis_c() +
+  theme_classic() +
+  labs(subtitle = "chroma self-similarity", x = "", y = "")
+
+
+(chroma_plot + timbre_plot) /
+(timbre_ssm_plot + chroma_ssm_plot)
+
+```
+
+# Homework
+
+## Analysis Views {.tabset}
+
+### Chromatic + Timbre (week 8)
+
+<div style="display: flex; gap: 20px;"> 
+  <img src="images/radiohead_chroma.png" width="400" alt="aphex twin chromagram"> 
+  <img src="images/radiohead_timbre.png" width="400" alt="aphex twin cepstrogram"> 
+</div>
+
+(1) *G* is consistently strong that suggests it's being the tonal center.
+
+### Self-Similarity Matrices (week 9)
+
+<div style="display: flex; gap: 20px;"> 
+  <img src="images/radiohead_ssm_pitch.png" width="400" alt="aphex twin chromagram"> 
+  <img src="images/radiohead_ssm_timbre.png" width="400" alt="aphex twin cepstrogram"> 
+</div>
+
+(1) the diagonal lines are strong, suggesting quite similar, recurring sections. 
+(2) the checkerboard pattern is particularly present, suggesting an abundance of recurring sections.
+
+### Keygrams + Chordograms (week 10)
+
+<div style="display: flex; gap: 20px;"> 
+  <img src="images/radiohead_keygram.png" width="400" alt="aphex twin chromagram"> 
+  <img src="images/radiohead_chordogram.png" width="400" alt="aphex twin cepstrogram"> 
+</div>
+
+the keygram centers around G# min and Bb min, suggesting this window being the tonal center.
+
+
+certain patterns can be noticed. for instance, the c#min-centered tonal information is alternating for the whole track. at the same time, the F#min takes the lead during the other part of the phase. this information can provide insight for further chord-progression analysis.
+
+### Tempo + Novelty (week 11)
+
+<div style="display: flex; flex-wrap: wrap; gap: 20px;">
+  <img src="images/week11/square-novelty.png" width="350" alt="novelty homework example">
+  <img src="images/week11/square_act.png" width="350" alt="tempo activation homework example">
+  <img src="images/week11/square_dft.png" width="350" alt="tempo dft homework example">
+</div>
+
+For this analysis My Red Hot Car by Squarepusher was chosen.
+
+
+the novelty visualization shows equal transient distribution within first 30 seconds of the track. some are slightly more acute, some less. this likely occurs due to high-density of resampled breaks, resulting in uneven though quite rythmical structure.
+
+
+ACT suggests various tempo options which spread across different frequencies.
+
+
+DFT strongly points to 280 BPM, which is uncommon for electronic tracks. therefore, it must be double time with the actual tempo lying around 140 BPM.
+
+### Spotify API (week 12)
+
+<div style="display: flex; flex-wrap: wrap; gap: 20px;">
+  <img src="images/week12/warp_dendrogram.png" width="400">
+  <img src="images/week12/warp_heatmap.png" width="400">
+</div>
+
+Dendrogram shows the connections between tracks based on extracted Spotify API features. the lower connected tracks tend to share the same values, e.g. Xtal, Eutow, Reach for The Dead are highly similiar. Another cluster is Aquarious, Vordhoshbrn, Beep Street, and Port Rhombus. 
+
+
+Heatmap allows visual exploration of the mentioned features.
+
+# Classwork
+
+## Classroom Views {.tabset}
+
+### Aphex Twin + Chroma (Week 8)
+
+<div style="display: flex; gap: 20px;"> 
+  <img src="images/aphex_chroma_v1.png" width="400" alt="aphex twin chromagram"> 
+  <img src="images/aphex_chroma_sst_v1.png" width="400" alt="aphex twin cepstrogram"> 
+</div>
+
+### Aphex Twin + Timbre (Week 9)
+
+<div style="display: flex; gap: 20px;"> 
+  <img src="images/aphex_timbre_v1.png" width="400" alt="aphex twin chromagram"> 
+  <img src="images/aphex_timbre_sst_v1.png" width="400" alt="aphex twin cepstrogram"> 
+</div>
+
+### Zager and Evans’ Keygram + Chordogram (Week 10)
+
+<div style="display: flex; gap: 20px;">
+  <img src="images/twnety_five_keygram.png" width="400" alt="aphex twin chromagram"> 
+  <img src="images/twnety_five_chordogram.png" width="400" alt="aphex twin cepstrogram"> 
+</div>
+
+### Tempo + Novelty (Week 11)
+
+<div style="display: flex; flex-wrap: wrap; gap: 20px;">
+  <img src="images/week11/graveola_act.png" width="350" alt="tempo activation classroom example">
+  <img src="images/week11/graveola_dft.png" width="350" alt="tempo dft classroom example">
+  <img src="images/week11/pata-pata-novelty.png" width="350" alt="novelty classroom example">
+</div>
+
+### Spotify API (Week 12)
+
+<div style="display: flex; flex-wrap: wrap; gap: 20px;">
+  <img src="images/week12/nrc_dendrogram.png" width="400">
+  <img src="images/week12/nrc_heatmap.png" width="400">
+</div>
+
+NRC Weekly selection playlist
+
+<div style="display: flex; flex-wrap: wrap; gap: 20px;">
+  <img src="images/week12/pop_dendrogram.png" width="400">
+  <img src="images/week12/pop_heatmap.png" width="400">
+</div>
+
+Spotify pop playlist
