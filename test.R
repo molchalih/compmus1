@@ -1,5 +1,0 @@
-getwd()
-list.files()
-list.files("datasets")
-list.files("datasets/final")
-list.files("datasets/final/tempo_novelty")

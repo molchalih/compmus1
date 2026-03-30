@@ -5,8 +5,8 @@ format:
     theme: journal
 execute:
   echo: false
-  # cache: true
-  # freeze: auto
+  cache: true
+  freeze: auto
 ---
 
 <script>
@@ -493,6 +493,9 @@ As for the future research, a bigger sample is needed to improve the reliability
 # References
 
 Eshun, Kodwo. 1998. More Brilliant Than the Sun: Adventures in Sonic Fiction. Quartet Books (UK). 
+
 Müller, Meinard. 2015. Fundamentals of Music Processing: Audio, Analysis, Algorithms, Applications. Springer. 
+
 Reynolds, Simon. 2012. Energy Flash: A Journey Through Rave Music and Dance Culture. Catapult. 
+
 “Web API Reference | Spotify for Developers.” n.d. https://developer.spotify.com/documentation/web-api/reference/get-audio-features.
